@@ -415,6 +415,7 @@ class CatalogTool(PloneBaseTool, BaseTool):
         for path in list(paths):
             path = path.encode('utf-8')  # paths must not be unicode
             try:
+                path = str(path)
                 site_path = '/'.join(site.getPhysicalPath())
                 parts = path[len(site_path) + 1:].split('/')
                 parent = site.unrestrictedTraverse('/'.join(parts[:-1]))
