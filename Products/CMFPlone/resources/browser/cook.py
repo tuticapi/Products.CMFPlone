@@ -10,7 +10,6 @@ from Products.CMFPlone.interfaces.resources import OVERRIDE_RESOURCE_DIRECTORY_N
 from Products.CMFPlone.resources.browser.combine import combine_bundles
 from scss import Compiler
 from six import StringIO
-from slimit import minify
 from zExceptions import NotFound
 from zope.component import getUtility
 from zope.component.hooks import getSite
@@ -19,6 +18,14 @@ from zope.interface import alsoProvides
 
 import logging
 import six
+
+if six.PY2:
+    from slimit import minify
+else:
+    # Python 3 compatibility of slimit is (s)limited
+    # TypeError: 'in <string>' requires string as left operand, not int
+    def minify(text, mangle=False, mangle_toplevel=False):
+        return text
 
 
 logger = logging.getLogger('Products.CMFPlone')
@@ -48,8 +55,6 @@ REQUIREJS_RESET_POSTFIX = """
 def cookWhenChangingSettings(context, bundle=None):
     """When our settings are changed, re-cook the not compilable bundles
     """
-    if six.PY3:
-        return
     registry = getUtility(IRegistry)
     resources = registry.collectionOfInterface(
         IResourceRegistry, prefix="plone.resources", check=False)
@@ -152,7 +157,8 @@ def cookWhenChangingSettings(context, bundle=None):
             cooked_string = cooked_string.encode('ascii', errors='ignore')
         try:
             folder = container[resource_name]
-            fi = StringIO(cooked_string)
+            cooked_string = cooked_string.encode('utf-8')
+            fi = six.BytesIO(cooked_string)
             folder.writeFile(resource_filepath, fi)
             logger.info('Writing cooked resource: %s', resource_path)
         except NotFound:

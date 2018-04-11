@@ -213,7 +213,8 @@ class ResourceBase(object):
         # We need to check all dependencies
         while len(depends_on) > 0:
             found = False
-            for key, bundles_to_add in depends_on.items():
+            depends_on_full = depends_on.copy()
+            for key, bundles_to_add in depends_on_full.items():
                 if key not in inserted:
                     continue
                 found = True

@@ -110,9 +110,11 @@ def write_js(context, folder, meta_bundle):
                 continue
             resources.append(resource)
 
-    fi = StringIO()
+    fi = six.BytesIO()
     for script in resources:
-        fi.write(script + '\n')
+        if not type(script) == six.binary_type:
+            script = script.encode('utf-8')
+        fi.write(script + six.b('\n'))
     folder.writeFile(meta_bundle + '.js', fi)
 
 
@@ -134,15 +136,18 @@ def write_css(context, folder, meta_bundle):
             # Process relative urls:
             # we prefix with current resource path any url not starting with
             # '/' or http: or data:
+            if type(css) == six.binary_type:
+                css = css.decode('utf-8')
             css = re.sub(
                 r"""(url\(['"]?(?!['"]?([a-z]+:|\/)))""",
                 r'\1%s/' % path,
                 css)
             resources.append(css)
 
-    fi = StringIO()
+    fi = six.BytesIO()
     for script in resources:
-        fi.write(script + '\n')
+        script = script.encode('utf-8')
+        fi.write(script + six.b('\n'))
     folder.writeFile(meta_bundle + '.css', fi)
 
 
@@ -156,16 +161,14 @@ def get_override_directory(context):
 
 
 def combine_bundles(context):
-    if six.PY3:
-        return
     container = get_override_directory(context)
     if PRODUCTION_RESOURCE_DIRECTORY not in container:
         container.makeDirectory(PRODUCTION_RESOURCE_DIRECTORY)
     production_folder = container[PRODUCTION_RESOURCE_DIRECTORY]
 
     # store timestamp
-    fi = StringIO()
-    fi.write(datetime.now().isoformat())
+    fi = six.BytesIO()
+    fi.write(datetime.now().isoformat().encode('utf-8'))
     production_folder.writeFile('timestamp.txt', fi)
 
     # generate new combined bundles
